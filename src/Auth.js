@@ -1,196 +1,175 @@
+// src/Auth.js
 import React, { useState } from "react";
-import { db } from "./firebase"; 
-import { collection, addDoc } from "firebase/firestore";
+import { db } from "./firebase";
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 
-const Auth = () => {
-  const [loginType, setLoginType] = useState("student");
+const Auth = ({ onLogin }) => {
+  const [loginType, setLoginType] = useState("student"); // "student" or "admin"
+
+  // admin fields
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  // student fields
   const [studentName, setStudentName] = useState("");
   const [registerNumber, setRegisterNumber] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const handleSubmit = async (e) => {
+  // admin creds
+  const ADMIN_USER = "admin@smvec.ac.in";
+  const ADMIN_PASS = "admin@123";
+
+  const handleAdminSubmit = (e) => {
     e.preventDefault();
-
-    try {
-      await addDoc(collection(db, "students"), {
-        name: studentName,
-        registerNumber,
-        loginType,
-        status: "pending", // always start as pending
-        createdAt: new Date(),
-      });
-
-      alert("✅ Details submitted successfully!");
-      setStudentName("");
-      setRegisterNumber("");
-    } catch (error) {
-      console.error("Error submitting details:", error);
-      alert("❌ Failed to submit. Check console.");
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+      onLogin("admin");
+    } else {
+      alert("Invalid admin credentials");
     }
   };
 
+  const handleStudentSubmit = async (e) => {
+    e.preventDefault();
+    if (!studentName.trim() || !registerNumber.trim()) {
+      alert("Fill name and register number");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const q = query(
+        collection(db, "students"),
+        where("name", "==", studentName.trim()),
+        where("registerNumber", "==", registerNumber.trim())
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        await addDoc(collection(db, "students"), {
+          name: studentName.trim(),
+          registerNumber: registerNumber.trim(),
+          status: "pending",
+          createdAt: new Date(),
+        });
+        alert("Submitted — please wait for admin approval.");
+      } else {
+        alert("Record found — checking status.");
+      }
+
+      // Notify parent (App) to enter student flow and check status
+      onLogin("student", studentName.trim(), registerNumber.trim());
+    } catch (err) {
+      console.error("Error submitting student:", err);
+      alert("Failed to submit. Check console.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // --- Styles including the logo area (kept inline per your request) ---
+  const styles = {
+    outer: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "flex-start",
+      minHeight: "100vh",
+      background: "#f7fafc",
+      paddingTop: 40,
+      fontFamily: "Arial, sans-serif",
+    },
+    card: {
+      width: 420,
+      background: "#fff",
+      padding: 22,
+      borderRadius: 10,
+      boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+    },
+    topLogo: { display: "flex", justifyContent: "center", marginBottom: 12 },
+    middleLogo: { height: 80, objectFit: "contain" },
+    smallLogosRow: { display: "flex", justifyContent: "center", gap: 12, marginBottom: 16 },
+    smallLogo: { width: 48, height: 48, objectFit: "contain" },
+    toggleRow: { display: "flex", justifyContent: "center", marginBottom: 12 },
+    toggleBtn: (active) => ({
+      padding: "8px 14px",
+      borderRadius: 6,
+      border: "none",
+      marginRight: 8,
+      background: active ? "#1a73e8" : "#e6eefc",
+      color: active ? "#fff" : "#1a73e8",
+      cursor: "pointer",
+      fontWeight: 600,
+    }),
+    formGroupLabel: { fontSize: 13, color: "#444", marginTop: 6 },
+    input: { padding: 10, borderRadius: 6, border: "1px solid #ddd", outline: "none" },
+    submitBtn: (busy) => ({
+      marginTop: 8,
+      padding: 10,
+      borderRadius: 6,
+      border: "none",
+      background: busy ? "#9bb7ff" : "#0066ff",
+      color: "#fff",
+      fontWeight: 700,
+      cursor: busy ? "default" : "pointer",
+    }),
+  };
+
   return (
-    <div style={styles.container}>
-      {/* ===== Middle Logo at top ===== */}
-      <div style={styles.topLogo}>
-        <img src="/logo1.png" alt="MiddleLogo" style={styles.middleLogo} />
-      </div>
+    <div style={styles.outer}>
+      <div style={styles.card}>
+        {/* ====== Logo block ====== */}
+        <div style={styles.topLogo}>
+          {/* main middle logo */}
+          <img src="/logo1.png" alt="Main Logo" style={styles.middleLogo} />
+        </div>
 
-      {/* ===== Smaller Logos under middle ===== */}
-      <div style={styles.smallLogos}>
-        <img src="/logo2.png" alt="Logo2" style={styles.smallLogo} />
-        <img src="/logo3.png" alt="Logo3" style={styles.smallLogo} />
-      </div>
+        <div style={styles.smallLogosRow}>
+          <img src="/logo2.png" alt="Logo 2" style={styles.smallLogo} />
+          <img src="/logo3.png" alt="Logo 3" style={styles.smallLogo} />
+          {/* add more small logos if you want */}
+        </div>
 
-      {/* ===== Login Box ===== */}
-      <div style={styles.loginBox}>
-        <p style={styles.loginAs}>LOG IN AS:</p>
-        <div style={styles.selector}>
-          <button
-            type="button"
-            style={{
-              ...styles.selectorBtn,
-              ...(loginType === "admin" ? styles.activeBtn : {}),
-            }}
-            onClick={() => setLoginType("admin")}
-          >
-            ADMIN
-          </button>
-          <button
-            type="button"
-            style={{
-              ...styles.selectorBtn,
-              ...(loginType === "student" ? styles.activeBtn : {}),
-            }}
-            onClick={() => setLoginType("student")}
-          >
+        {/* ====== Toggle (Student / Admin) ====== */}
+        <div style={styles.toggleRow}>
+          <button onClick={() => setLoginType("student")} style={styles.toggleBtn(loginType === "student")}>
             STUDENT
+          </button>
+          <button onClick={() => setLoginType("admin")} style={styles.toggleBtn(loginType === "admin")}>
+            ADMIN
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <h3 style={styles.signIn}>SIGN IN</h3>
+        {/* ====== Form area ====== */}
+        {loginType === "admin" ? (
+          <form onSubmit={handleAdminSubmit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <h2 style={{ textAlign: "center", margin: "6px 0 8px" }}>Admin Login</h2>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>STUDENT NAME</label>
-            <input
-              type="text"
-              value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
-              style={styles.input}
-              required
-            />
-          </div>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>REGISTER NUMBER</label>
-            <input
-              type="text"
-              value={registerNumber}
-              onChange={(e) => setRegisterNumber(e.target.value)}
-              style={styles.input}
-              required
-            />
-          </div>
+            <label style={styles.formGroupLabel}>Username</label>
+            <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin@smvec.ac.in" style={styles.input} required />
 
-          <button type="submit" style={styles.submitBtn}>
-            SUBMIT
-          </button>
-        </form>
+            <label style={styles.formGroupLabel}>Password</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="admin password" style={styles.input} required />
+
+            <button type="submit" style={{ ...styles.submitBtn(false) }}>
+              Sign In
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleStudentSubmit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <h2 style={{ textAlign: "center", margin: "6px 0 6px" }}>Student Sign-up / Check</h2>
+
+            <label style={styles.formGroupLabel}>Student Name</label>
+            <input value={studentName} onChange={(e) => setStudentName(e.target.value)} placeholder="Student Name" style={styles.input} required />
+
+            <label style={styles.formGroupLabel}>Register Number</label>
+            <input value={registerNumber} onChange={(e) => setRegisterNumber(e.target.value)} placeholder="Register Number" style={styles.input} required />
+
+            <button type="submit" disabled={busy} style={styles.submitBtn(busy)}>
+              {busy ? "Submitting..." : "Submit / Check Status"}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    fontFamily: "Arial, sans-serif",
-    textAlign: "center",
-    backgroundColor: "#fff",
-    minHeight: "100vh",
-    padding: "20px",
-  },
-  topLogo: {
-    marginBottom: "10px",
-  },
-  middleLogo: {
-    height: "100px",
-  },
-  smallLogos: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "15px",
-    marginBottom: "20px",
-  },
-  smallLogo: {
-    width: "60px",
-    height: "60px",
-    objectFit: "contain",
-  },
-  loginBox: {
-    margin: "20px auto",
-    backgroundColor: "#1a237e",
-    padding: "30px",
-    borderRadius: "8px",
-    width: "350px",
-    color: "white",
-  },
-  loginAs: {
-    fontWeight: "bold",
-    marginBottom: "10px",
-  },
-  selector: {
-    display: "flex",
-    justifyContent: "center",
-    marginBottom: "20px",
-  },
-  selectorBtn: {
-    padding: "10px 20px",
-    border: "none",
-    background: "blue",
-    color: "yellow",
-    fontWeight: "bold",
-    cursor: "pointer",
-    margin: "0 5px",
-  },
-  activeBtn: {
-    border: "2px solid yellow",
-  },
-  signIn: {
-    marginBottom: "20px",
-    fontWeight: "bold",
-    color: "yellow",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  inputGroup: {
-    marginBottom: "15px",
-    textAlign: "left",
-  },
-  label: {
-    display: "block",
-    backgroundColor: "blue",
-    color: "yellow",
-    padding: "5px",
-    fontWeight: "bold",
-    marginBottom: "5px",
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-    fontSize: "14px",
-  },
-  submitBtn: {
-    marginTop: "10px",
-    background: "blue",
-    color: "yellow",
-    padding: "10px 20px",
-    border: "none",
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
 };
 
 export default Auth;
