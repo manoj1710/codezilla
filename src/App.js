@@ -1,62 +1,29 @@
-import React, { useState } from "react";
-import Auth from "./Auth"; // the unified auth file you already have
+import React, { useState, useEffect } from "react";
+import Auth from "./Auth";
 import AdminPanel from "./AdminPanel";
-import AdminLogin from "./AdminLogin";
 import Compiler from "./Compiler";
 import Compiler2 from "./Compiler2";
 import { db } from "./firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 
-/**
- * App - orchestrates the flow:
- *  - shows Auth (student/admin selection) by default
- *  - admin -> AdminPanel
- *  - student -> pending / approved / rejected -> compilers or message
- *
- * Auth must call onLogin(type, name, registerNumber)
- */
 const App = () => {
-  const [userType, setUserType] = useState(null); // "admin" or "student"
+  const [userType, setUserType] = useState(null);
   const [studentName, setStudentName] = useState("");
   const [registerNumber, setRegisterNumber] = useState("");
   const [studentStatus, setStudentStatus] = useState(null);
   const [compilerStep, setCompilerStep] = useState(1);
 
-  // Called by Auth.js when user submits (admin or student)
-  const handleLogin = async (type, name = "", regNo = "") => {
+  const handleLogin = (type, name = "", regNo = "") => {
     setUserType(type);
 
-    if (type === "admin") {
-      // show panel
-      return;
-    }
+    if (type === "admin") return; // admin panel
 
-    // student
+    // student login
     setStudentName(name);
     setRegisterNumber(regNo);
-
-    try {
-      const q = query(
-        collection(db, "students"),
-        where("name", "==", name),
-        where("registerNumber", "==", regNo)
-      );
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        const studentData = snapshot.docs[0].data();
-        setStudentStatus(studentData.status);
-      } else {
-        // no record yet; Auth.js should have created it, but fallback to pending
-        setStudentStatus("pending");
-      }
-    } catch (err) {
-      console.error("Error checking student status:", err);
-      setStudentStatus("pending");
-    }
   };
 
   const handleLogout = () => {
-    // return to Auth screen
     setUserType(null);
     setStudentName("");
     setRegisterNumber("");
@@ -64,10 +31,30 @@ const App = () => {
     setCompilerStep(1);
   };
 
+  // 🔥 Real-time student status listener
+  useEffect(() => {
+    if (userType === "student" && studentName && registerNumber) {
+      const q = query(
+        collection(db, "students"),
+        where("name", "==", studentName),
+        where("registerNumber", "==", registerNumber)
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        if (!snapshot.empty) {
+          const data = snapshot.docs[0].data();
+          setStudentStatus(data.status || "pending");
+        } else {
+          setStudentStatus("pending");
+        }
+      });
+
+      return () => unsubscribe(); // cleanup listener on logout/unmount
+    }
+  }, [userType, studentName, registerNumber]);
+
   // Admin view
-  if (userType === "admin") {
-    return <AdminPanel onLogout={handleLogout} />;
-  }
+  if (userType === "admin") return <AdminPanel onLogout={handleLogout} />;
 
   // Student flow
   if (userType === "student") {
@@ -92,7 +79,6 @@ const App = () => {
       );
     }
 
-    // rejected or other
     return (
       <div style={{ textAlign: "center", padding: 50, fontFamily: "Arial, sans-serif", color: "red" }}>
         <h2>Access denied.</h2>
@@ -100,7 +86,6 @@ const App = () => {
     );
   }
 
-  // Default: show auth page
   return <Auth onLogin={handleLogin} />;
 };
 
