@@ -1,4 +1,3 @@
-// src/Auth.js
 import React, { useState } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
@@ -65,7 +64,7 @@ const Auth = ({ onLogin }) => {
     }
   };
 
-  // --- Styles including the logo area (kept inline per your request) ---
+  // --- Styles including the logo area ---
   const styles = {
     outer: {
       display: "flex",
@@ -99,7 +98,7 @@ const Auth = ({ onLogin }) => {
       fontWeight: 600,
     }),
     formGroupLabel: { fontSize: 13, color: "#444", marginTop: 6 },
-    input: { padding: 10, borderRadius: 6, border: "1px solid #ddd", outline: "none" },
+    input: { padding: 10, borderRadius: 6, border: "1px solid #ddd", outline: "none", width: '100%', boxSizing: 'border-box' },
     submitBtn: (busy) => ({
       marginTop: 8,
       padding: 10,
@@ -118,13 +117,12 @@ const Auth = ({ onLogin }) => {
         {/* ====== Logo block ====== */}
         <div style={styles.topLogo}>
           {/* main middle logo */}
-          <img src="/logo1.png" alt="Main Logo" style={styles.middleLogo} />
+          <img src="/logo1.png" alt="Main Logo" style={styles.middleLogo} onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/200x80/e6eefc/1a73e8?text=Main+Logo'; }} />
         </div>
 
         <div style={styles.smallLogosRow}>
-          <img src="/logo2.png" alt="Logo 2" style={styles.smallLogo} />
-          <img src="/logo3.png" alt="Logo 3" style={styles.smallLogo} />
-          {/* add more small logos if you want */}
+          <img src="/logo2.png" alt="Logo 2" style={styles.smallLogo} onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/48x48/e6eefc/1a73e8?text=L2'; }} />
+          <img src="/logo3.png" alt="Logo 3" style={styles.smallLogo} onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/48x48/e6eefc/1a73e8?text=L3'; }} />
         </div>
 
         {/* ====== Toggle (Student / Admin) ====== */}
