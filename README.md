@@ -22,8 +22,6 @@
 
 <br/>
 
-<img src="https://delighted-coral-yfxxmzp9.edgeone.dev/WhatsApp%20Image%202026-07-24%20at%2014.22.16.jpeg" width="850" alt="OmniInspect AI — Live Inspection Preview" />
-
 <sub>Live inspection workspace — component upload, AI defect detection, and confidence-scored results in one screen</sub>
 
 <br/><br/>
@@ -131,7 +129,7 @@ OmniInspect AI uses **Google Gemini Vision** to inspect *any* component with **z
 <br/><sub>Upload → AI Analysis → Confidence-Scored Result</sub>
 </td>
 <td align="center" width="50%">
-<img src="https://placehold.co/500x320/0d1117/f97316?text=%F0%9F%94%A5+Add+3D+Viewer+Screenshot" width="100%"/>
+<img src="https://organic-jade-ogvf7vxp.edgeone.dev/WhatsApp%20Image%202026-07-24%20at%2014.49.36.jpeg"/>
 <br/><b>3D Inspection Tray</b>
 <br/><sub>Replace with a screenshot of the Three.js component viewer</sub>
 </td>
