@@ -997,7 +997,7 @@ Not currently — it depends on the Gemini Vision API. Edge/offline inference is
 
 <div align="center">
 
-<h4>🎓 [Your College / Institution Name]</h4>
+<h4>🎓 [TEAM DETAILS]</h4>
 
 </div>
 
@@ -1018,8 +1018,4 @@ Released under the **MIT License** — see [LICENSE](./LICENSE) for details.
 
 **⭐ If this project impressed you, a star helps a lot ⭐**
 
-<br/><br/>
 
-<img src="https://img.shields.io/badge/Made%20with-%E2%9D%A4%EF%B8%8F%20%2B%20Gemini%20Vision-red?style=for-the-badge"/>
-
-</div>
