@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/STATUS-ACTIVE%20DEVELOPMENT-success?style=for-the-badge" />
+<img src="https://delighted-coral-yfxxmzp9.edgeone.dev/WhatsApp%20Image%202026-07-24%20at%2014.22.16.jpeg" />
 
 # 🔍 OmniInspect AI
 
