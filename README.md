@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/STATUS-ACTIVE%20DEVELOPMENT-success?style=for-the-badge" />
-
 <br/><br/>
 
 <h1>🔍 OmniInspect AI</h1>
